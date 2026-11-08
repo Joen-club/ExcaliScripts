@@ -1,61 +1,42 @@
 /**
  * @file main.ts
- * @overview
- *   Command Style Editor script entrypoint.
+ * @overview Command Style Editor entrypoint for Obsidian ExcalidrawAutomate.
  *
- *   Folder: src/scripts/command-style-editor
- *   Build output: build/command-style-editor/command-style-editor.md
+ * User workflow: select one or many shapes/groups, invoke this Script Engine
+ * command using one Obsidian shortcut, type configurable compact commands and
+ * preview each character. Longest-match tokens, numeric prefixes and z undo
+ * compose deterministically. Backspace replays the sequence from the captured
+ * baseline; Escape cancels; Enter commits one EA transaction.
  *
- * @author  Your Name
- * @version 1.0.0
- * @created 2026-11-06
+ * The separate vault JSON profile is editable with an Obsidian-native manager;
+ * no hard-coded style commands are installed. UI position can be dragged, saved,
+ * docked or controlled by configurable commands. All behavior is modular.
+ *
+ * Entry build: build/command-style-editor/command-style-editor.md
  */
+import { openStyleConsole } from "./console";
+import { EMPTY_PROFILE, loadProfile, readPreferences } from "./profile-store";
+import type { CommandProfile } from "./model";
 
-import { showNotice } from "../../sharedUtils/notice";
-
-/**
- * Runs the Command Style Editor script.
- *
- * @param ea   The ExcalidrawAutomate instance.
- * @param _api The live Excalidraw React API.
- * @returns    Promise resolving when execution completes.
- */
-export async function runCommandStyleEditor(
-  ea: ExcalidrawAutomate,
-  _api: ExcalidrawAPI,
-): Promise<void> {
-  const selected = ea.getViewSelectedElements();
-
-  if (selected.length === 0) {
-    showNotice("Please select at least one element.");
-    return;
+/** Entry used by Script Engine; report corrupt JSON without destroying it. */
+export async function runCommandStyleEditor(ea:ExcalidrawAutomate,utils:ScriptUtils):Promise<void> {
+  const {path}=readPreferences(ea);
+  let profile:CommandProfile;
+  try {profile=await loadProfile(ea,path,true);}
+  catch (error) {
+    // Damaged JSON must not lock out the GUI. Explicit confirmation is required
+    // before the manager overwrites the unreadable original file.
+    new ea.obsidian.Notice(`Command Style Editor: ${String(error)}. Open Bindings to recover the profile.`);
+    profile=structuredClone(EMPTY_PROFILE);
   }
-
-  // TODO: implement Command Style Editor
-  // Suggested structure:
-  // - Keep reusable logic in src/sharedUtils/
-  // - Keep script-local constants/types under this folder
-  // - Commit scene changes via await ea.addElementsToView(...)
-
-  showNotice("Done. Replace this with your real workflow.");
+  await openStyleConsole(ea,utils,profile);
 }
-
-/**
- * Script-engine entrypoint.
- */
-async function main(): Promise<void> {
-  if (!ea.verifyMinimumPluginVersion("2.0.0")) {
-    new ea.obsidian.Notice("This script requires Excalidraw 2.0.0 or newer.");
-    return;
+/** Guard the injected view API before accessing any scene. */
+async function main():Promise<void> {
+  if (!ea.verifyMinimumPluginVersion("2.27.0")) return;
+  if (!ea.targetView || !ea.getExcalidrawAPI()) {
+    new ea.obsidian.Notice("Open an Excalidraw drawing first.");return;
   }
-
-  const api = ea.getExcalidrawAPI();
-  if (!api) {
-    showNotice("Could not obtain Excalidraw API.");
-    return;
-  }
-
-  await runCommandStyleEditor(ea, api);
+  await runCommandStyleEditor(ea,utils);
 }
-
 void main();

@@ -1,0 +1,24 @@
+# Command Style Editor runtime acceptance checklist
+
+Automated tests cover the pure command engine, profile validation, selection expansion, position calculation, and a mocked scene adapter. In Obsidian Excalidraw 2.27+ perform the following manually on a copy of a drawing. Record a pass/fail result, plugin version, desktop/mobile device and screenshots for any failure.
+
+1. **First launch / profile:** command profile is created empty and the console offers ⚙ without any styles changing. Add `s` = fontSize +2; Save. Reopen; verify the profile is loaded.
+2. **Live keystrokes and prefix overrides:** add `sc` = strokeColor #1971c2. Type `s`, then `c`: `s` font-size preview is replaced by `sc` color preview; no stacked font-size increase. Backspace `c`: the original font-size preview returns.
+3. **Counts, repeated keys and undo:** `sss` equals `3s`; `3s2z` leaves one increment; deleting both `z` characters restores all three; `z` and `3z` with nothing to undo do not crash.
+4. **Invalid input:** unknown commands, partial longer commands and trailing numeric prefixes show an error and block Apply. A valid `s` is still immediately usable even if `sc` exists.
+5. **Cancel and history:** preview a style, press Escape: drawing returns to baseline; undo stack has no separate step for each preview keystroke. Apply several commands: one normal Undo should restore all selected elements; one Redo should reapply all.
+6. **Mixed multiple selection:** select multiple text, rectangles and arrows; change properties that apply to each compatible type. Verify unrelated/locked elements are untouched. Test `roundness`, fill pattern, opacity and arrowheads.
+7. **Groups / bound text / frames:** select a group including text and shapes; apply font and line style, inspect nested groups. Select a rectangle with bound text and change font size. Verify no loss of links, grouping or container bindings.
+8. **Text layout:** enlarge text with multiple paragraphs; check wrapped text, autoresize, bound text, non-default font and group layout. Compare canceled and committed results.
+9. **Profile editor:** create, copy, disable, change and remove bindings; save and reopen. Test invalid duplicate token, unsupported color, oversized JSON, import from vault, file picker import and export refusal/confirmation on existing file.
+10. **Placement:** drag console, click ⌖, close and reopen; restore location. Check each dock option, custom X/Y and bound console position commands. Verify `consoleRemember` only persists on Apply, not when its token is deleted.
+11. **Windows and mobile:** open in split pane and separate Obsidian popout; check the right owner window, position clamping, Escape, Enter, repeat-hotkey closes/cancels the open console, and event cleanup. Verify physical Android/iOS touch only if those platforms are in scope.
+12. **Conflicting edits:** preview a font-size change; alter only element X or its `customData` with an external action. Verify cancellation restores font size while retaining independent X/metadata changes. Repeat with an external edit to the *same* fontSize field: it must be preserved and Apply must be blocked. Check autosave and recovery after closing the original view.
+13. **Closing during Apply:** where practical, delay a host save and close the console while commit is pending. Ensure a single committed change, eventual cleanup, and no partial rollback. Double-click Apply to confirm only one transaction.
+14. **Overlapping incomplete tokens:** bind `s` to font size and `save` to consoleRemember; type `s`, then `sa`, then `save`, then Backspace. Check that the incomplete `sa` removes the tentative `s` preview, while the completed longer command is distinct.
+
+Do not declare full runtime acceptance unless these checks have been completed in a real Obsidian client.
+
+15. **Profile recovery and accidental overwrite:** Corrupt `commands.json`, launch the script, and open the Bindings manager. Verify a warning, no implicit overwrite, and explicit confirmation before replacing corrupt data. Change the active profile path to an unrelated existing JSON file and verify Save refuses to overwrite without consent. Edit a binding and start an import; verify confirmation is required before discarding unsaved changes.
+16. **Rapid updates and position rebase:** Type a long command rapidly enough to queue UI updates, then cancel; no provisional style should remain. With an active `consoleY` command, drag the console and continue typing; the movement must not be applied twice. Save and reopen its position. Verify the version nonce/cache invalidates during each visible preview in real Excalidraw.
+17. **Pending saves:** Trigger a profile Save, edit another binding before the write completes, and verify the newer edits are still marked unsaved. Rapidly double-click Save and verify one write occurs. Close while saving and confirm the finished profile is not truncated or stale.

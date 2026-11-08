@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "name": "Optional two-hand starter (not installed automatically)",
+  "bindings": [
+    {"token":"s","name":"Larger text (left)","property":"fontSize","operation":"add","value":2,"enabled":true},
+    {"token":"k","name":"Larger text (right)","property":"fontSize","operation":"add","value":2,"enabled":true},
+    {"token":"d","name":"Smaller text (left)","property":"fontSize","operation":"add","value":-2,"enabled":true},
+    {"token":"j","name":"Smaller text (right)","property":"fontSize","operation":"add","value":-2,"enabled":true},
+    {"token":"sc","name":"Blue stroke (multi-character)","property":"strokeColor","operation":"set","value":"#1971c2","enabled":true},
+    {"token":"f","name":"Cycle line style","property":"strokeStyle","operation":"cycle","value":"solid","enabled":true},
+    {"token":"p","name":"Move console down 10px","property":"consoleY","operation":"add","value":10,"enabled":true}
+  ]
+}
